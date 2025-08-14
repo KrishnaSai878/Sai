@@ -1,28 +1,24 @@
+# utils.py - Utility Functions and Helpers
+
 import os
-from datetime import datetime
+import uuid
 from functools import wraps
-from flask import abort, current_app
+from flask import current_app, abort, flash
 from flask_login import current_user
 from werkzeug.utils import secure_filename
-from models import UserRole, Achievement, UserAchievement, User
 from app import db
 
-def role_required(allowed_roles):
-    """Decorator to restrict access based on user roles"""
+def role_required(required_role):
+    """Decorator to require specific user role for route access"""
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated:
-                abort(401)
+                abort(401)  # Unauthorized
             
-            if isinstance(allowed_roles, str):
-                roles = [allowed_roles]
-            else:
-                roles = allowed_roles
-            
-            user_role = current_user.role.value if hasattr(current_user.role, 'value') else current_user.role
-            if user_role not in roles:
-                abort(403)
+            # Check if user has the required role
+            if current_user.role.value != required_role:
+                abort(403)  # Forbidden
             
             return f(*args, **kwargs)
         return decorated_function
@@ -34,27 +30,29 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def save_uploaded_file(file, folder='verification'):
-    """Save uploaded file and return filename"""
+def save_uploaded_file(file, folder):
+    """Save uploaded file securely and return filename"""
     if file and allowed_file(file.filename):
+        # Generate unique filename
         filename = secure_filename(file.filename)
-        # Add timestamp to avoid conflicts
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
-        filename = timestamp + filename
+        name, ext = os.path.splitext(filename)
+        unique_filename = f"{name}_{uuid.uuid4().hex}{ext}"
         
+        # Create folder if it doesn't exist
         upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], folder)
         os.makedirs(upload_path, exist_ok=True)
         
-        file_path = os.path.join(upload_path, filename)
+        file_path = os.path.join(upload_path, unique_filename)
         file.save(file_path)
-        return filename
+        return unique_filename
     return None
 
 def award_points(user_id, points):
     """Award points to a user and check for new achievements"""
+    from models import User
     user = User.query.get(user_id)
     if user and user.is_volunteer():
-        user.points += points
+        user.total_points += points
         db.session.commit()
         check_achievements(user)
 
@@ -62,6 +60,8 @@ def check_achievements(user):
     """Check if user has earned any new achievements"""
     if not user.is_volunteer():
         return
+    
+    from models import Achievement, UserAchievement
     
     # Get achievements user doesn't have yet
     earned_achievement_ids = db.session.query(UserAchievement.achievement_id).filter_by(user_id=user.id).all()
@@ -80,6 +80,8 @@ def check_achievements(user):
 
 def initialize_achievements():
     """Initialize default achievements if they don't exist"""
+    from models import Achievement
+    
     achievements_data = [
         {'name': 'First Steps', 'description': 'Complete your first volunteer slot', 'points_required': 10, 'icon': 'award'},
         {'name': 'Dedicated Helper', 'description': 'Earn 50 points through volunteering', 'points_required': 50, 'icon': 'heart'},
@@ -102,21 +104,19 @@ def initialize_achievements():
 def get_user_stats(user):
     """Get statistics for a user based on their role"""
     if user.is_volunteer():
-        from models import Booking
+        from models import Booking, BookingStatus
         total_bookings = Booking.query.filter_by(volunteer_id=user.id).count()
-        from models import BookingStatus
         completed_bookings = Booking.query.filter_by(volunteer_id=user.id, status=BookingStatus.COMPLETED).count()
         return {
             'total_bookings': total_bookings,
             'completed_bookings': completed_bookings,
             'points': user.total_points,
-            'achievements_count': len(user.achievements)
+            'achievements_count': len(user.user_achievements)
         }
     elif user.is_ngo():
-        from models import Project, Booking
+        from models import Project, Booking, TimeSlot
         total_projects = Project.query.filter_by(ngo_id=user.id).count()
         active_projects = Project.query.filter_by(ngo_id=user.id, is_active=True).count()
-        from models import TimeSlot
         total_volunteers = db.session.query(Booking.volunteer_id).join(
             TimeSlot
         ).join(Project).filter(Project.ngo_id == user.id).distinct().count()
@@ -134,10 +134,10 @@ def get_user_stats(user):
             'total_amount': total_amount
         }
     elif user.is_admin():
-        from models import User, Project, Donation, VerificationUpload
+        from models import User, Project, Donation, VerificationUpload, VerificationStatus
         total_users = User.query.count()
         total_projects = Project.query.count()
-        pending_verifications = VerificationUpload.query.filter_by(status='pending').count()
+        pending_verifications = VerificationUpload.query.filter_by(status=VerificationStatus.PENDING).count()
         total_donations = db.session.query(db.func.sum(Donation.amount)).scalar() or 0
         return {
             'total_users': total_users,
