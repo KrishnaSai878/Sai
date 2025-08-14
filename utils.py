@@ -54,7 +54,7 @@ def award_points(user_id, points):
     """Award points to a user and check for new achievements"""
     user = User.query.get(user_id)
     if user and user.is_volunteer():
-        user.points += points
+        user.total_points += points
         db.session.commit()
         check_achievements(user)
 
@@ -110,7 +110,7 @@ def get_user_stats(user):
             'total_bookings': total_bookings,
             'completed_bookings': completed_bookings,
             'points': user.total_points,
-            'achievements_count': len(user.achievements)
+            'achievements_count': len(user.user_achievements)
         }
     elif user.is_ngo():
         from models import Project, Booking
@@ -134,10 +134,10 @@ def get_user_stats(user):
             'total_amount': total_amount
         }
     elif user.is_admin():
-        from models import User, Project, Donation, VerificationUpload
+        from models import User, Project, Donation, VerificationUpload, VerificationStatus
         total_users = User.query.count()
         total_projects = Project.query.count()
-        pending_verifications = VerificationUpload.query.filter_by(status='pending').count()
+        pending_verifications = VerificationUpload.query.filter_by(status=VerificationStatus.PENDING).count()
         total_donations = db.session.query(db.func.sum(Donation.amount)).scalar() or 0
         return {
             'total_users': total_users,
