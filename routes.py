@@ -223,7 +223,7 @@ def ngo_dashboard():
     recent_projects = Project.query.filter_by(ngo_id=current_user.id).order_by(desc(Project.created_at)).limit(3).all()
     pending_verifications = VerificationUpload.query.join(Booking).join(TimeSlot).join(Project).filter(
         Project.ngo_id == current_user.id,
-        VerificationUpload.status == 'pending'
+        VerificationUpload.status == VerificationStatus.PENDING
     ).count()
     
     return render_template('ngo/dashboard.html', stats=stats, 
@@ -431,7 +431,7 @@ def admin_user_management():
 @login_required
 @role_required('admin')
 def admin_verification_queue():
-    pending_verifications = VerificationUpload.query.filter_by(status='pending').order_by(desc(VerificationUpload.uploaded_at)).all()
+    pending_verifications = VerificationUpload.query.filter_by(status=VerificationStatus.PENDING).order_by(desc(VerificationUpload.uploaded_at)).all()
     return render_template('admin/verification_queue.html', verifications=pending_verifications)
 
 @app.route('/admin/platform_analytics')
