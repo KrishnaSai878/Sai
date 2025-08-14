@@ -2,9 +2,9 @@ import os
 from datetime import datetime, timedelta
 from flask import render_template, redirect, url_for, flash, request, abort, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from werkzeug.security import generate_password_hash
+# from werkzeug.security import generate_password_hash
 from app import app, db
-from models import User, UserRole, Project, TimeSlot, Booking, VerificationUpload, Donation, Achievement, UserAchievement
+from models import User, UserRole, Project, TimeSlot, Booking, VerificationUpload, Donation, Achievement, UserAchievement, VerificationStatus, BookingStatus
 from forms import (LoginForm, RegistrationForm, ProjectForm, TimeSlotForm, 
                    VerificationUploadForm, DonationForm, VerificationReviewForm)
 from utils import role_required, save_uploaded_file, award_points, initialize_achievements, get_user_stats
@@ -37,10 +37,14 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data):
-            login_user(user)
-            flash('Login successful!', 'success')
-            return redirect(url_for('index'))
-        flash('Invalid username or password', 'danger')
+            if not user.is_active:
+                flash('Your account is deactivated. Please contact an administrator.', 'danger')
+            else:
+                login_user(user)
+                flash('Login successful!', 'success')
+                return redirect(url_for('index'))
+        else:
+            flash('Invalid username or password', 'danger')
     return render_template('auth/login.html', form=form)
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -95,7 +99,7 @@ def volunteer_dashboard():
     upcoming_slots = Booking.query.join(TimeSlot).filter(
         Booking.volunteer_id == current_user.id,
         TimeSlot.start_time > datetime.utcnow(),
-        Booking.status == 'confirmed'
+        Booking.status == BookingStatus.BOOKED
     ).order_by(TimeSlot.start_time).limit(5).all()
     
     return render_template('volunteer/dashboard.html', stats=stats, 
@@ -115,12 +119,12 @@ def book_slot(slot_id):
     slot = TimeSlot.query.get_or_404(slot_id)
     
     # Check if slot is available
-    if not slot.is_available or slot.available_spots <= 0:
+    if slot.is_full or slot.available_spots <= 0:
         flash('This slot is no longer available', 'warning')
         return redirect(url_for('volunteer_projects'))
     
     # Check if user already booked this slot
-    existing_booking = Booking.query.filter_by(volunteer_id=current_user.id, time_slot_id=slot_id).first()
+    existing_booking = Booking.query.filter_by(volunteer_id=current_user.id, time_slot_id=slot_id).filter(Booking.status != BookingStatus.CANCELLED).first()
     if existing_booking:
         flash('You have already booked this slot', 'warning')
         return redirect(url_for('volunteer_projects'))
@@ -190,7 +194,7 @@ def volunteer_leaderboards():
             Project, TimeSlot.project_id == Project.id
         ).filter(
             Project.ngo_id == ngo.id,
-            Booking.status == 'completed'
+            Booking.status == BookingStatus.COMPLETED
         ).group_by(User.id).order_by(desc(func.sum(Booking.points_awarded))).limit(5).all()
         
         ngo_leaders[ngo] = volunteers
@@ -207,7 +211,7 @@ def volunteer_achievements():
     ).filter(UserAchievement.user_id == current_user.id).all()
     
     available_achievements = db.session.query(Achievement).filter(
-        ~Achievement.id.in_([ua.achievement_id for ua in current_user.achievements])
+        ~Achievement.id.in_([ua.achievement_id for ua in current_user.user_achievements])
     ).all()
     
     return render_template('volunteer/achievements.html', 
@@ -280,10 +284,10 @@ def add_time_slots(project_id):
                 slot.start_time = form.start_time.data
                 slot.end_time = form.end_time.data
                 slot.max_volunteers = form.max_volunteers.data
-            db.session.add(slot)
-            db.session.commit()
-            flash('Time slot added successfully!', 'success')
-            return redirect(url_for('ngo_manage_projects'))
+                db.session.add(slot)
+                db.session.commit()
+                flash('Time slot added successfully!', 'success')
+                return redirect(url_for('ngo_manage_projects'))
     
     return render_template('ngo/add_slots.html', form=form, project=project)
 
@@ -324,14 +328,17 @@ def review_verification(verification_id):
     
     form = VerificationReviewForm()
     if form.validate_on_submit():
-        verification.status = form.status.data
-        verification.notes = form.notes.data
+        from models import VerificationStatus
+        verification.status = VerificationStatus.APPROVED if form.status.data == 'approved' else VerificationStatus.REJECTED
+        verification.review_notes = form.notes.data
+        verification.reviewed_at = datetime.utcnow()
+        verification.reviewed_by_id = current_user.id
         
-        if form.status.data == 'approved':
+        if verification.status == VerificationStatus.APPROVED:
             # Award points and mark booking as completed
             booking = verification.booking
             points = booking.time_slot.project.points_per_slot
-            booking.status = 'completed'
+            booking.status = BookingStatus.COMPLETED
             booking.points_awarded = points
             award_points(booking.volunteer_id, points)
             
@@ -443,7 +450,7 @@ def admin_platform_analytics():
     users_by_role = db.session.query(User.role, func.count(User.id)).group_by(User.role).all()
     total_projects = Project.query.count()
     total_bookings = Booking.query.count()
-    completed_bookings = Booking.query.filter_by(status='completed').count()
+    completed_bookings = Booking.query.filter_by(status=BookingStatus.COMPLETED).count()
     total_donations = db.session.query(func.sum(Donation.amount)).scalar() or 0
     
     return render_template('admin/platform_analytics.html',
@@ -481,4 +488,4 @@ def not_found(error):
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
-    return render_template('errors/500.html'), 500
+    return render_template('errors/500.html', error=error), 500
