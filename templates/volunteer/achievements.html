@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Achievements - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i data-feather="award" class="me-2"></i>Achievements
+        </h2>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i data-feather="star" style="width: 32px; height: 32px;" class="mb-2"></i>
+                <h3>{{ current_user.points }}</h3>
+                <small>Total Points</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i data-feather="award" style="width: 32px; height: 32px;" class="mb-2"></i>
+                <h3>{{ earned_achievements|length }}</h3>
+                <small>Achievements Earned</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <i data-feather="target" style="width: 32px; height: 32px;" class="mb-2"></i>
+                <h3>{{ available_achievements|length }}</h3>
+                <small>Still to Unlock</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Earned Achievements -->
+{% if earned_achievements %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">
+                <i data-feather="check-circle" class="me-2 text-success"></i>Earned Achievements
+            </h4>
+        </div>
+        
+        {% for achievement, earned_at in earned_achievements %}
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card border-success">
+                    <div class="card-body text-center">
+                        <i data-feather="{{ achievement.badge_icon }}" class="text-success mb-3" style="width: 48px; height: 48px;"></i>
+                        <h5 class="card-title">{{ achievement.name }}</h5>
+                        <p class="card-text text-muted">{{ achievement.description }}</p>
+                        <small class="text-success">
+                            <i data-feather="calendar" class="me-1" style="width: 14px; height: 14px;"></i>
+                            Earned {{ earned_at.strftime('%Y-%m-%d') }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<!-- Available Achievements -->
+{% if available_achievements %}
+    <div class="row">
+        <div class="col-12">
+            <h4 class="mb-3">
+                <i data-feather="target" class="me-2 text-warning"></i>Available Achievements
+            </h4>
+        </div>
+        
+        {% for achievement in available_achievements %}
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i data-feather="{{ achievement.badge_icon }}" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                        <h5 class="card-title">{{ achievement.name }}</h5>
+                        <p class="card-text text-muted">{{ achievement.description }}</p>
+                        
+                        <div class="progress mb-2">
+                            {% set progress = (current_user.points / achievement.points_required * 100) | min(100) %}
+                            <div class="progress-bar" role="progressbar" style="width: {{ progress }}%">
+                                {{ "%.0f"|format(progress) }}%
+                            </div>
+                        </div>
+                        
+                        <small class="text-muted">
+                            {{ current_user.points }} / {{ achievement.points_required }} points
+                            {% if current_user.points < achievement.points_required %}
+                                <br>
+                                <span class="text-warning">{{ achievement.points_required - current_user.points }} more needed</span>
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% if not earned_achievements and not available_achievements %}
+    <div class="text-center py-5">
+        <i data-feather="award" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+        <h4 class="text-muted">No Achievements Available</h4>
+        <p class="text-muted">Start volunteering to unlock achievements!</p>
+        <a href="{{ url_for('volunteer_projects') }}" class="btn btn-primary">
+            <i data-feather="search" class="me-2"></i>Browse Projects
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

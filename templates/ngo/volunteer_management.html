@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Volunteer Management - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i data-feather="users" class="me-2"></i>Volunteer Management
+        </h2>
+        <p class="text-muted">Volunteers who have booked slots for your projects</p>
+    </div>
+</div>
+
+{% if volunteers %}
+    <div class="row">
+        {% for volunteer in volunteers %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">{{ volunteer.first_name }} {{ volunteer.last_name }}</h5>
+                        <small class="text-muted">@{{ volunteer.username }}</small>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i data-feather="mail" class="me-1" style="width: 14px; height: 14px;"></i>
+                                {{ volunteer.email }}
+                            </small>
+                        </div>
+                        
+                        {% if volunteer.phone %}
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i data-feather="phone" class="me-1" style="width: 14px; height: 14px;"></i>
+                                    {{ volunteer.phone }}
+                                </small>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mb-2">
+                            <small class="text-warning">
+                                <i data-feather="star" class="me-1" style="width: 14px; height: 14px;"></i>
+                                <strong>{{ volunteer.points }}</strong> total points
+                            </small>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i data-feather="calendar" class="me-1" style="width: 14px; height: 14px;"></i>
+                                Joined: {{ volunteer.created_at.strftime('%Y-%m-%d') }}
+                            </small>
+                        </div>
+                        
+                        <!-- Volunteer's bookings for this NGO's projects -->
+                        {% set ngo_bookings = [] %}
+                        {% for booking in volunteer.volunteer_bookings %}
+                            {% if booking.time_slot.project.ngo_id == current_user.id %}
+                                {% set _ = ngo_bookings.append(booking) %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <div class="mt-3">
+                            <h6>Project History:</h6>
+                            {% if ngo_bookings %}
+                                {% for booking in ngo_bookings[:3] %}
+                                    <div class="d-flex justify-content-between align-items-center py-1">
+                                        <small>{{ booking.time_slot.project.title[:20] }}...</small>
+                                        <span class="badge bg-{{ 'success' if booking.status == 'completed' else 'primary' if booking.status == 'confirmed' else 'secondary' }}">
+                                            {{ booking.status }}
+                                        </span>
+                                    </div>
+                                {% endfor %}
+                                
+                                {% if ngo_bookings|length > 3 %}
+                                    <small class="text-muted">+ {{ ngo_bookings|length - 3 }} more bookings</small>
+                                {% endif %}
+                            {% else %}
+                                <small class="text-muted">No bookings for your projects</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                Total bookings: {{ ngo_bookings|length }}
+                            </small>
+                            <small class="text-success">
+                                Completed: {{ ngo_bookings|selectattr('status', 'equalto', 'completed')|list|length }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i data-feather="users" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+        <h4 class="text-muted">No Volunteers Yet</h4>
+        <p class="text-muted">No volunteers have booked slots for your projects yet.</p>
+        <a href="{{ url_for('ngo_manage_projects') }}" class="btn btn-primary">
+            <i data-feather="folder" class="me-2"></i>Manage Projects
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

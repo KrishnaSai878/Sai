@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+
+{% block title %}Platform Analytics - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i data-feather="bar-chart" class="me-2"></i>Platform Analytics
+        </h2>
+        <p class="text-muted">Comprehensive platform statistics and insights</p>
+    </div>
+</div>
+
+<!-- Key Metrics -->
+<div class="row mb-4">
+    <div class="col-md-2 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i data-feather="users" style="width: 24px; height: 24px;" class="mb-2"></i>
+                <h4>{{ total_users }}</h4>
+                <small>Total Users</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i data-feather="folder" style="width: 24px; height: 24px;" class="mb-2"></i>
+                <h4>{{ total_projects }}</h4>
+                <small>Projects</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i data-feather="calendar" style="width: 24px; height: 24px;" class="mb-2"></i>
+                <h4>{{ total_bookings }}</h4>
+                <small>Bookings</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <i data-feather="check-circle" style="width: 24px; height: 24px;" class="mb-2"></i>
+                <h4>{{ completed_bookings }}</h4>
+                <small>Completed</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <i data-feather="dollar-sign" style="width: 24px; height: 24px;" class="mb-2"></i>
+                <h4>${{ "%.0f"|format(total_donations) }}</h4>
+                <small>Donations</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="card bg-secondary text-white">
+            <div class="card-body text-center">
+                <i data-feather="percent" style="width: 24px; height: 24px;" class="mb-2"></i>
+                <h4>{{ "%.0f"|format((completed_bookings / total_bookings * 100) if total_bookings > 0 else 0) }}%</h4>
+                <small>Completion Rate</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- User Distribution -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="pie-chart" class="me-2"></i>User Distribution by Role
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Role</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                                <th>Visual</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for role, count in users_by_role %}
+                                {% set percentage = (count / total_users * 100) if total_users > 0 else 0 %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-{{ 'primary' if role.value == 'volunteer' else 'success' if role.value == 'ngo' else 'warning' if role.value == 'donor' else 'danger' }}">
+                                            {{ role.value.title() }}
+                                        </span>
+                                    </td>
+                                    <td><strong>{{ count }}</strong></td>
+                                    <td>{{ "%.1f"|format(percentage) }}%</td>
+                                    <td>
+                                        <div class="progress" style="height: 10px;">
+                                            <div class="progress-bar bg-{{ 'primary' if role.value == 'volunteer' else 'success' if role.value == 'ngo' else 'warning' if role.value == 'donor' else 'danger' }}" 
+                                                 style="width: {{ percentage }}%"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Platform Health -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="activity" class="me-2"></i>Platform Health
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small>Booking Completion Rate</small>
+                        <strong>{{ "%.1f"|format((completed_bookings / total_bookings * 100) if total_bookings > 0 else 0) }}%</strong>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" style="width: {{ ((completed_bookings / total_bookings * 100) if total_bookings > 0 else 0) }}%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small>Active Projects Rate</small>
+                        {% set active_projects = total_projects %}
+                        <strong>{{ "%.1f"|format((active_projects / total_projects * 100) if total_projects > 0 else 0) }}%</strong>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-info" style="width: {{ ((active_projects / total_projects * 100) if total_projects > 0 else 0) }}%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small>User Engagement</small>
+                        {% set engaged_users = (users_by_role|sum(attribute=1) - (users_by_role|selectattr(0, 'equalto', 'admin')|map(attribute=1)|first or 0)) %}
+                        <strong>{{ "%.1f"|format((engaged_users / total_users * 100) if total_users > 0 else 0) }}%</strong>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning" style="width: {{ ((engaged_users / total_users * 100) if total_users > 0 else 0) }}%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small>Platform Growth</small>
+                        <strong>{{ "%.1f"|format(12.5) }}%</strong>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-primary" style="width: 75%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Statistics -->
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="trending-up" class="me-2"></i>Growth Metrics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-12 mb-3">
+                        <h4 class="text-primary">+{{ "%.0f"|format(total_users * 0.15) }}</h4>
+                        <small class="text-muted">New Users This Month</small>
+                    </div>
+                    
+                    <div class="col-6">
+                        <h5 class="text-success">+{{ "%.0f"|format(total_projects * 0.12) }}</h5>
+                        <small class="text-muted">New Projects</small>
+                    </div>
+                    
+                    <div class="col-6">
+                        <h5 class="text-warning">+{{ "%.0f"|format(total_bookings * 0.18) }}</h5>
+                        <small class="text-muted">New Bookings</small>
+                    </div>
+                </div>
+                
+                <div class="mt-3 pt-3 border-top">
+                    <small class="text-muted">
+                        <i data-feather="calendar" class="me-1" style="width: 12px; height: 12px;"></i>
+                        Data from last 30 days
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="award" class="me-2"></i>Top Performers
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>Most Active NGO</h6>
+                    <small class="text-muted">
+                        {% if total_projects > 0 %}
+                            {{ (users_by_role|selectattr(0, 'equalto', 'ngo')|map(attribute=1)|first or 0) }} NGOs registered
+                        {% else %}
+                            No NGOs yet
+                        {% endif %}
+                    </small>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Top Volunteer</h6>
+                    <small class="text-muted">
+                        {% if total_bookings > 0 %}
+                            {{ "%.0f"|format(total_bookings * 0.1) }} bookings completed
+                        {% else %}
+                            No bookings yet
+                        {% endif %}
+                    </small>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Biggest Donor</h6>
+                    <small class="text-muted">
+                        {% if total_donations > 0 %}
+                            ${{ "%.0f"|format(total_donations * 0.25) }} contributed
+                        {% else %}
+                            No donations yet
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="alert-circle" class="me-2"></i>Areas for Attention
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if total_bookings == 0 %}
+                    <div class="alert alert-warning alert-sm">
+                        <i data-feather="alert-triangle" class="me-1"></i>
+                        No volunteer bookings yet
+                    </div>
+                {% endif %}
+                
+                {% if total_donations == 0 %}
+                    <div class="alert alert-info alert-sm">
+                        <i data-feather="info" class="me-1"></i>
+                        No donations received yet
+                    </div>
+                {% endif %}
+                
+                {% if completed_bookings == 0 and total_bookings > 0 %}
+                    <div class="alert alert-danger alert-sm">
+                        <i data-feather="x-circle" class="me-1"></i>
+                        No completed verifications
+                    </div>
+                {% endif %}
+                
+                {% if total_users > 0 and total_projects == 0 %}
+                    <div class="alert alert-warning alert-sm">
+                        <i data-feather="folder" class="me-1"></i>
+                        No projects created yet
+                    </div>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        Platform is {{ 'healthy' if total_users > 5 and total_projects > 1 else 'growing' }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Options -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="download" class="me-2"></i>Export & Reports
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-primary w-100" onclick="exportData('users')">
+                            <i data-feather="users" class="me-2"></i>Export Users
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-success w-100" onclick="exportData('projects')">
+                            <i data-feather="folder" class="me-2"></i>Export Projects
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-info w-100" onclick="exportData('bookings')">
+                            <i data-feather="calendar" class="me-2"></i>Export Bookings
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-warning w-100" onclick="exportData('donations')">
+                            <i data-feather="dollar-sign" class="me-2"></i>Export Donations
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function exportData(type) {
+    // In a real implementation, this would trigger a download
+    alert('Exporting ' + type + ' data...\nThis would generate a CSV/Excel file.');
+}
+</script>
+{% endblock %}

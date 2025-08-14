@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Verification - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i data-feather="upload" class="me-2"></i>Upload Verification
+                </h4>
+            </div>
+            
+            <div class="card-body">
+                <!-- Booking Information -->
+                <div class="alert alert-info">
+                    <h5>{{ booking.time_slot.project.title }}</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small>
+                                <i data-feather="home" class="me-1" style="width: 14px; height: 14px;"></i>
+                                <strong>NGO:</strong> {{ booking.time_slot.project.creator.ngo_name or booking.time_slot.project.creator.username }}
+                            </small>
+                            <br>
+                            <small>
+                                <i data-feather="map-pin" class="me-1" style="width: 14px; height: 14px;"></i>
+                                <strong>Location:</strong> {{ booking.time_slot.project.location }}
+                            </small>
+                        </div>
+                        <div class="col-md-6">
+                            <small>
+                                <i data-feather="calendar" class="me-1" style="width: 14px; height: 14px;"></i>
+                                <strong>Date:</strong> {{ booking.time_slot.start_time.strftime('%Y-%m-%d') }}
+                            </small>
+                            <br>
+                            <small>
+                                <i data-feather="clock" class="me-1" style="width: 14px; height: 14px;"></i>
+                                <strong>Time:</strong> {{ booking.time_slot.start_time.strftime('%H:%M') }} - {{ booking.time_slot.end_time.strftime('%H:%M') }}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small>
+                            <i data-feather="star" class="me-1 text-warning" style="width: 14px; height: 14px;"></i>
+                            <strong>Points to earn:</strong> {{ booking.time_slot.project.points_per_slot }}
+                        </small>
+                    </div>
+                </div>
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-4">
+                        {{ form.file.label(class="form-label") }}
+                        {{ form.file(class="form-control", accept="image/*") }}
+                        {% if form.file.errors %}
+                            <div class="text-danger">
+                                {% for error in form.file.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="text-muted">Accepted formats: JPG, PNG, JPEG (max 16MB)</small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        {{ form.notes.label(class="form-label") }}
+                        {{ form.notes(class="form-control", rows="3", placeholder="Describe what you accomplished, any challenges faced, or additional context about your work (optional)") }}
+                        {% if form.notes.errors %}
+                            <div class="text-danger">
+                                {% for error in form.notes.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Guidelines -->
+                    <div class="alert alert-warning">
+                        <h6><i data-feather="camera" class="me-2"></i>Photo Guidelines</h6>
+                        <ul class="mb-0">
+                            <li>Upload a clear photo showing your completed volunteer work</li>
+                            <li>Include yourself in the photo if possible</li>
+                            <li>Make sure the image clearly demonstrates the work accomplished</li>
+                            <li>Avoid blurry or low-quality images</li>
+                            <li>Include the NGO location/project materials if relevant</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- What happens next -->
+                    <div class="alert alert-light">
+                        <h6><i data-feather="info" class="me-2"></i>What Happens Next?</h6>
+                        <ol class="mb-0">
+                            <li>Your verification photo will be reviewed by the NGO</li>
+                            <li>The NGO will approve or reject your submission</li>
+                            <li>If approved, you'll receive {{ booking.time_slot.project.points_per_slot }} points</li>
+                            <li>Your booking status will be updated to "completed"</li>
+                            <li>You may earn achievements based on your point total</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex">
+                        <button type="submit" class="btn btn-success flex-md-fill">
+                            <i data-feather="upload" class="me-2"></i>Upload Verification
+                        </button>
+                        <a href="{{ url_for('volunteer_bookings') }}" class="btn btn-outline-secondary flex-md-fill">
+                            <i data-feather="arrow-left" class="me-2"></i>Back to Bookings
+                        </a>
+                    </div>
+                </form>
+                
+                <!-- Previous Uploads -->
+                {% if booking.verification_uploads %}
+                    <div class="mt-4">
+                        <h6>Previous Uploads</h6>
+                        {% for upload in booking.verification_uploads %}
+                            <div class="border rounded p-2 mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small>
+                                            <strong>{{ upload.filename }}</strong><br>
+                                            Uploaded: {{ upload.upload_time.strftime('%Y-%m-%d %H:%M') }}
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-{{ 'success' if upload.status == 'approved' else 'warning' if upload.status == 'pending' else 'danger' }}">
+                                        {{ upload.status.title() }}
+                                    </span>
+                                </div>
+                                {% if upload.notes %}
+                                    <small class="text-muted d-block mt-1">
+                                        <em>{{ upload.notes }}</em>
+                                    </small>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Preview selected file
+document.querySelector('input[type="file"]').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const fileName = file.name;
+        const fileSize = (file.size / 1024 / 1024).toFixed(2); // Convert to MB
+        
+        // Show file info
+        const fileInfo = document.createElement('small');
+        fileInfo.className = 'text-muted d-block mt-1';
+        fileInfo.textContent = `Selected: ${fileName} (${fileSize} MB)`;
+        
+        // Remove any existing file info
+        const existingInfo = e.target.parentNode.querySelector('.file-info');
+        if (existingInfo) {
+            existingInfo.remove();
+        }
+        
+        fileInfo.className += ' file-info';
+        e.target.parentNode.appendChild(fileInfo);
+    }
+});
+</script>
+{% endblock %}

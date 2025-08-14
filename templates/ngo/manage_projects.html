@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Projects - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i data-feather="folder" class="me-2"></i>Manage Projects
+            </h2>
+            <a href="{{ url_for('create_project') }}" class="btn btn-primary">
+                <i data-feather="plus" class="me-2"></i>Create New Project
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if projects %}
+    <div class="row">
+        {% for project in projects %}
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h5 class="mb-0">{{ project.title }}</h5>
+                            <span class="badge bg-{{ 'success' if project.is_active else 'secondary' }}">
+                                {{ 'Active' if project.is_active else 'Inactive' }}
+                            </span>
+                        </div>
+                        <small class="text-muted">Created: {{ project.created_at.strftime('%Y-%m-%d') }}</small>
+                    </div>
+                    
+                    <div class="card-body">
+                        <p class="card-text">{{ project.description }}</p>
+                        
+                        <div class="row mb-2">
+                            <div class="col-sm-6">
+                                <small class="text-muted">
+                                    <i data-feather="map-pin" class="me-1" style="width: 14px; height: 14px;"></i>
+                                    <strong>Location:</strong> {{ project.location }}
+                                </small>
+                            </div>
+                            <div class="col-sm-6">
+                                <small class="text-muted">
+                                    <i data-feather="star" class="me-1" style="width: 14px; height: 14px;"></i>
+                                    <strong>Points:</strong> {{ project.points_per_slot }} per slot
+                                </small>
+                            </div>
+                        </div>
+                        
+                        {% if project.required_skills %}
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i data-feather="tool" class="me-1" style="width: 14px; height: 14px;"></i>
+                                    <strong>Required Skills:</strong> {{ project.required_skills }}
+                                </small>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mt-3">
+                            <h6>Time Slots:</h6>
+                            {% if project.time_slots %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Date & Time</th>
+                                                <th>Available</th>
+                                                <th>Booked</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for slot in project.time_slots[:5] %}
+                                                <tr>
+                                                    <td>
+                                                        <small>
+                                                            {{ slot.start_time.strftime('%m/%d %H:%M') }} - {{ slot.end_time.strftime('%H:%M') }}
+                                                        </small>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-{{ 'success' if slot.is_available else 'secondary' }}">
+                                                            {{ 'Yes' if slot.is_available else 'No' }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <small>{{ slot.bookings|length }}/{{ slot.max_volunteers }}</small>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                {% if project.time_slots|length > 5 %}
+                                    <small class="text-muted">+ {{ project.time_slots|length - 5 }} more slots</small>
+                                {% endif %}
+                            {% else %}
+                                <p class="text-muted small">No time slots created yet.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer">
+                        <div class="btn-group" role="group">
+                            <a href="{{ url_for('add_time_slots', project_id=project.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i data-feather="plus" class="me-1"></i>Add Slots
+                            </a>
+                            <button class="btn btn-sm btn-outline-secondary">
+                                <i data-feather="edit" class="me-1"></i>Edit
+                            </button>
+                            <button class="btn btn-sm btn-outline-{{ 'danger' if project.is_active else 'success' }}">
+                                <i data-feather="{{ 'pause' if project.is_active else 'play' }}" class="me-1"></i>
+                                {{ 'Deactivate' if project.is_active else 'Activate' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i data-feather="folder" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+        <h4 class="text-muted">No Projects Yet</h4>
+        <p class="text-muted">Create your first project to start connecting with volunteers.</p>
+        <a href="{{ url_for('create_project') }}" class="btn btn-primary">
+            <i data-feather="plus" class="me-2"></i>Create Your First Project
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

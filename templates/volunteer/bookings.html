@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}My Bookings - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i data-feather="calendar" class="me-2"></i>My Bookings
+        </h2>
+    </div>
+</div>
+
+{% if bookings %}
+    <div class="row">
+        {% for booking in bookings %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h6 class="mb-0">{{ booking.time_slot.project.title }}</h6>
+                            <span class="badge bg-{{ 'success' if booking.status == 'completed' else 'primary' if booking.status == 'confirmed' else 'secondary' }}">
+                                {{ booking.status.title() }}
+                            </span>
+                        </div>
+                        <small class="text-muted">{{ booking.time_slot.project.creator.ngo_name or booking.time_slot.project.creator.username }}</small>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <small>
+                                <i data-feather="calendar" class="me-1" style="width: 14px; height: 14px;"></i>
+                                {{ booking.time_slot.start_time.strftime('%Y-%m-%d') }}
+                            </small>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small>
+                                <i data-feather="clock" class="me-1" style="width: 14px; height: 14px;"></i>
+                                {{ booking.time_slot.start_time.strftime('%H:%M') }} - {{ booking.time_slot.end_time.strftime('%H:%M') }}
+                            </small>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small>
+                                <i data-feather="map-pin" class="me-1" style="width: 14px; height: 14px;"></i>
+                                {{ booking.time_slot.project.location }}
+                            </small>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small>
+                                <i data-feather="user-clock" class="me-1" style="width: 14px; height: 14px;"></i>
+                                Booked: {{ booking.booking_time.strftime('%Y-%m-%d %H:%M') }}
+                            </small>
+                        </div>
+                        
+                        {% if booking.points_awarded > 0 %}
+                            <div class="mb-2">
+                                <small class="text-success">
+                                    <i data-feather="star" class="me-1" style="width: 14px; height: 14px;"></i>
+                                    Earned {{ booking.points_awarded }} points
+                                </small>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-footer">
+                        {% if booking.status == 'confirmed' %}
+                            {% if booking.time_slot.end_time < moment.utcnow() %}
+                                {% if not booking.verification_uploads %}
+                                    <a href="{{ url_for('upload_verification', booking_id=booking.id) }}" 
+                                       class="btn btn-sm btn-warning">
+                                        <i data-feather="upload" class="me-1"></i>Upload Verification
+                                    </a>
+                                {% else %}
+                                    <small class="text-info">
+                                        <i data-feather="clock" class="me-1"></i>Verification pending review
+                                    </small>
+                                {% endif %}
+                            {% else %}
+                                <small class="text-muted">
+                                    <i data-feather="clock" class="me-1"></i>Upcoming
+                                </small>
+                            {% endif %}
+                        {% elif booking.status == 'completed' %}
+                            <small class="text-success">
+                                <i data-feather="check-circle" class="me-1"></i>Completed & Verified
+                            </small>
+                        {% endif %}
+                        
+                        {% if booking.verification_uploads %}
+                            <div class="mt-2">
+                                {% for upload in booking.verification_uploads %}
+                                    <small class="d-block text-muted">
+                                        <i data-feather="image" class="me-1" style="width: 12px; height: 12px;"></i>
+                                        Uploaded: {{ upload.upload_time.strftime('%Y-%m-%d %H:%M') }}
+                                        <span class="badge badge-sm bg-{{ 'success' if upload.status == 'approved' else 'warning' if upload.status == 'pending' else 'danger' }}">
+                                            {{ upload.status.title() }}
+                                        </span>
+                                    </small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i data-feather="calendar" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+        <h4 class="text-muted">No Bookings Yet</h4>
+        <p class="text-muted">You haven't booked any volunteer slots yet.</p>
+        <a href="{{ url_for('volunteer_projects') }}" class="btn btn-primary">
+            <i data-feather="search" class="me-2"></i>Browse Projects
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

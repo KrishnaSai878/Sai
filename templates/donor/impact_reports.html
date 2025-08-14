@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Impact Reports - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i data-feather="bar-chart" class="me-2"></i>Impact Reports
+        </h2>
+        <p class="text-muted">See the impact of your contributions</p>
+    </div>
+</div>
+
+<!-- Overall Impact Summary -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-gradient-primary text-white">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h2 class="mb-1">${{ "%.0f"|format(total_donated) }}</h2>
+                        <small>Total Contributed</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h2 class="mb-1">{{ projects_supported }}</h2>
+                        <small>Projects Supported</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h2 class="mb-1">{{ project_donations|length }}</h2>
+                        <small>NGOs Helped</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h2 class="mb-1">{{ moment.utcnow().year - current_user.created_at.year or 1 }}</h2>
+                        <small>Years Active</small>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <p class="mb-0">
+                        <i data-feather="heart" class="me-2"></i>
+                        Thank you for making a difference in {{ projects_supported }} project{{ 's' if projects_supported != 1 else '' }}!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Project Breakdown -->
+{% if project_donations %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i data-feather="pie-chart" class="me-2"></i>Projects You've Supported
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Project</th>
+                                    <th>NGO</th>
+                                    <th>Your Contribution</th>
+                                    <th>Impact</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for project, amount in project_donations %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ project.title }}</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i data-feather="map-pin" class="me-1" style="width: 12px; height: 12px;"></i>
+                                                {{ project.location }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <small>{{ project.creator.ngo_name or project.creator.username }}</small>
+                                        </td>
+                                        <td>
+                                            <h5 class="text-success mb-0">${{ "%.2f"|format(amount) }}</h5>
+                                            {% set total_project_donations = project.donations|sum(attribute='amount') %}
+                                            {% if total_project_donations > 0 %}
+                                                <small class="text-muted">
+                                                    {{ "%.1f"|format((amount / total_project_donations) * 100) }}% of total
+                                                </small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-info">
+                                                <i data-feather="users" class="me-1" style="width: 12px; height: 12px;"></i>
+                                                {{ project.time_slots|selectattr('bookings')|list|length }} volunteer slots
+                                            </small>
+                                            <br>
+                                            <small class="text-warning">
+                                                <i data-feather="star" class="me-1" style="width: 12px; height: 12px;"></i>
+                                                {{ project.points_per_slot }} points/slot
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if project.is_active else 'secondary' }}">
+                                                {{ 'Active' if project.is_active else 'Completed' }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Monthly Giving Pattern -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i data-feather="calendar" class="me-2"></i>Giving Timeline
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% set months = {} %}
+                    {% for project, amount in project_donations %}
+                        {% for donation in project.donations %}
+                            {% if donation.donor_id == current_user.id %}
+                                {% set month = donation.donation_date.strftime('%Y-%m') %}
+                                {% set _ = months.update({month: months.get(month, 0) + donation.amount}) %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                    
+                    {% if months %}
+                        {% for month, total in months.items() %}
+                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                <span>{{ month }}</span>
+                                <strong class="text-success">${{ "%.2f"|format(total) }}</strong>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No donation timeline available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i data-feather="target" class="me-2"></i>Impact Metrics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-12 mb-3">
+                            <div class="border-bottom pb-2">
+                                <h4 class="text-primary">{{ projects_supported }}</h4>
+                                <small class="text-muted">Projects Supported</small>
+                            </div>
+                        </div>
+                        
+                        {% set total_volunteers_helped = 0 %}
+                        {% for project, amount in project_donations %}
+                            {% set project_volunteers = project.time_slots|selectattr('bookings')|map(attribute='bookings')|flatten|map(attribute='volunteer_id')|unique|list|length %}
+                            {% set total_volunteers_helped = total_volunteers_helped + project_volunteers %}
+                        {% endfor %}
+                        
+                        <div class="col-6">
+                            <h4 class="text-success">{{ total_volunteers_helped }}</h4>
+                            <small class="text-muted">Volunteers Supported</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-warning">Community</h4>
+                            <small class="text-muted">Impact Level</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: {{ ((total_donated / 1000) * 100)|min(100) }}%">
+                                {{ "%.0f"|format(((total_donated / 1000) * 100)|min(100)) }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">Progress towards $1,000 impact milestone</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i data-feather="bar-chart" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+        <h4 class="text-muted">No Impact Data Yet</h4>
+        <p class="text-muted">Start supporting projects to see your impact!</p>
+        <a href="{{ url_for('donor_browse_projects') }}" class="btn btn-primary">
+            <i data-feather="search" class="me-2"></i>Browse Projects
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

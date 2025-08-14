@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Donate to {{ project.title }} - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i data-feather="heart" class="me-2"></i>Support: {{ project.title }}
+                </h4>
+                <small class="text-muted">{{ project.creator.ngo_name or project.creator.username }}</small>
+            </div>
+            
+            <div class="card-body">
+                <!-- Project Information -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>Project Details</h5>
+                        <p class="text-muted">{{ project.description }}</p>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i data-feather="map-pin" class="me-1" style="width: 14px; height: 14px;"></i>
+                                <strong>Location:</strong> {{ project.location }}
+                            </small>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i data-feather="star" class="me-1" style="width: 14px; height: 14px;"></i>
+                                <strong>Points per slot:</strong> {{ project.points_per_slot }}
+                            </small>
+                        </div>
+                        
+                        {% if project.required_skills %}
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i data-feather="tool" class="me-1" style="width: 14px; height: 14px;"></i>
+                                    <strong>Skills needed:</strong> {{ project.required_skills }}
+                                </small>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5>Current Support</h5>
+                        {% set existing_donations = project.donations %}
+                        {% if existing_donations %}
+                            <div class="mb-3">
+                                <h4 class="text-success">${{ "%.2f"|format(existing_donations|sum(attribute='amount')) }}</h4>
+                                <small class="text-muted">Raised from {{ existing_donations|length }} donor{{ 's' if existing_donations|length != 1 else '' }}</small>
+                            </div>
+                            
+                            <div class="recent-supporters">
+                                <h6>Recent Supporters:</h6>
+                                {% for donation in existing_donations[:3] %}
+                                    <div class="d-flex justify-content-between align-items-center py-1">
+                                        <small>
+                                            {% if donation.is_anonymous %}
+                                                Anonymous donor
+                                            {% else %}
+                                                {{ donation.donor.first_name }} {{ donation.donor.last_name[0] }}.
+                                            {% endif %}
+                                        </small>
+                                        <small class="text-success">${{ "%.2f"|format(donation.amount) }}</small>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">Be the first to support this project!</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Donation Form -->
+                <div class="row">
+                    <div class="col-12">
+                        <form method="POST">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="mb-3">
+                                {{ form.amount.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.amount(class="form-control", placeholder="0.00") }}
+                                </div>
+                                {% if form.amount.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.amount.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                
+                                <!-- Quick Amount Buttons -->
+                                <div class="mt-2">
+                                    <small class="text-muted">Quick amounts:</small>
+                                    <div class="btn-group btn-group-sm ms-2" role="group">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="setAmount(10)">$10</button>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="setAmount(25)">$25</button>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="setAmount(50)">$50</button>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="setAmount(100)">$100</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.message.label(class="form-label") }}
+                                {{ form.message(class="form-control", rows="3", placeholder="Share a message of support (optional)") }}
+                                {% if form.message.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.message.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-4">
+                                <div class="form-check">
+                                    {{ form.is_anonymous(class="form-check-input") }}
+                                    {{ form.is_anonymous.label(class="form-check-label") }}
+                                </div>
+                                <small class="text-muted">Your name will not be shown publicly if checked</small>
+                                {% if form.is_anonymous.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.is_anonymous.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-grid gap-2 d-md-flex">
+                                <button type="submit" class="btn btn-success flex-md-fill">
+                                    <i data-feather="heart" class="me-2"></i>Make Donation
+                                </button>
+                                <a href="{{ url_for('donor_browse_projects') }}" class="btn btn-outline-secondary flex-md-fill">
+                                    <i data-feather="arrow-left" class="me-2"></i>Back to Projects
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function setAmount(amount) {
+    document.getElementById('amount').value = amount;
+}
+</script>
+{% endblock %}

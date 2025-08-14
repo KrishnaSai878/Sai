@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Verification Gallery - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i data-feather="image" class="me-2"></i>Verification Gallery
+        </h2>
+        <p class="text-muted">Review verification photos uploaded by volunteers</p>
+    </div>
+</div>
+
+{% if verifications %}
+    <div class="row">
+        {% for verification in verifications %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-0">{{ verification.volunteer.first_name }} {{ verification.volunteer.last_name }}</h6>
+                                <small class="text-muted">{{ verification.booking.time_slot.project.title }}</small>
+                            </div>
+                            <span class="badge bg-{{ 'success' if verification.status == 'approved' else 'warning' if verification.status == 'pending' else 'danger' }}">
+                                {{ verification.status.title() }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i data-feather="calendar" class="me-1" style="width: 14px; height: 14px;"></i>
+                                Slot: {{ verification.booking.time_slot.start_time.strftime('%Y-%m-%d %H:%M') }}
+                            </small>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i data-feather="upload" class="me-1" style="width: 14px; height: 14px;"></i>
+                                Uploaded: {{ verification.upload_time.strftime('%Y-%m-%d %H:%M') }}
+                            </small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="bg-light p-2 rounded text-center">
+                                <i data-feather="image" style="width: 48px; height: 48px;" class="text-muted"></i>
+                                <br>
+                                <small class="text-muted">{{ verification.filename }}</small>
+                            </div>
+                        </div>
+                        
+                        {% if verification.notes %}
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <strong>Volunteer Notes:</strong><br>
+                                    {{ verification.notes }}
+                                </small>
+                            </div>
+                        {% endif %}
+                        
+                        {% if verification.status != 'pending' and verification.notes %}
+                            <div class="alert alert-sm alert-{{ 'success' if verification.status == 'approved' else 'danger' }}">
+                                <small>
+                                    <strong>Review Notes:</strong><br>
+                                    {{ verification.notes }}
+                                </small>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-footer">
+                        {% if verification.status == 'pending' %}
+                            <div class="d-grid gap-2 d-md-flex">
+                                <a href="{{ url_for('review_verification', verification_id=verification.id) }}" 
+                                   class="btn btn-primary btn-sm">
+                                    <i data-feather="eye" class="me-1"></i>Review
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    Status: {{ verification.status.title() }}
+                                </small>
+                                {% if verification.status == 'approved' %}
+                                    <small class="text-success">
+                                        <i data-feather="star" class="me-1"></i>
+                                        {{ verification.booking.time_slot.project.points_per_slot }} points awarded
+                                    </small>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Filter Options -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h6>Filter by Status:</h6>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-secondary btn-sm">All</button>
+                        <button type="button" class="btn btn-outline-warning btn-sm">Pending</button>
+                        <button type="button" class="btn btn-outline-success btn-sm">Approved</button>
+                        <button type="button" class="btn btn-outline-danger btn-sm">Rejected</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i data-feather="image" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+        <h4 class="text-muted">No Verification Photos</h4>
+        <p class="text-muted">Volunteers haven't uploaded any verification photos yet.</p>
+        <a href="{{ url_for('ngo_manage_projects') }}" class="btn btn-primary">
+            <i data-feather="folder" class="me-2"></i>Manage Projects
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

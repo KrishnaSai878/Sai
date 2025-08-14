@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="hero-section text-center py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="display-4 mb-4">
+                <i data-feather="heart" class="text-primary me-3"></i>
+                Welcome to NGO Platform
+            </h1>
+            <p class="lead mb-4">
+                Connecting passionate volunteers, dedicated NGOs, and generous donors to create meaningful change in communities worldwide.
+            </p>
+            
+            {% if not current_user.is_authenticated %}
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-md-2">
+                        <i data-feather="user-plus" class="me-2"></i>Get Started
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">
+                        <i data-feather="log-in" class="me-2"></i>Sign In
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i data-feather="users" class="text-primary mb-3" style="width: 48px; height: 48px;"></i>
+                <h5 class="card-title">Volunteers</h5>
+                <p class="card-text">Join projects, earn points, and make a difference in your community.</p>
+                {% if not current_user.is_authenticated %}
+                    <a href="{{ url_for('register') }}" class="btn btn-outline-primary">Join as Volunteer</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i data-feather="home" class="text-success mb-3" style="width: 48px; height: 48px;"></i>
+                <h5 class="card-title">NGOs</h5>
+                <p class="card-text">Create projects, manage volunteers, and track your organization's impact.</p>
+                {% if not current_user.is_authenticated %}
+                    <a href="{{ url_for('register') }}" class="btn btn-outline-success">Register NGO</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i data-feather="dollar-sign" class="text-warning mb-3" style="width: 48px; height: 48px;"></i>
+                <h5 class="card-title">Donors</h5>
+                <p class="card-text">Support meaningful projects and track your donation impact.</p>
+                {% if not current_user.is_authenticated %}
+                    <a href="{{ url_for('register') }}" class="btn btn-outline-warning">Become a Donor</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i data-feather="shield" class="text-info mb-3" style="width: 48px; height: 48px;"></i>
+                <h5 class="card-title">Platform</h5>
+                <p class="card-text">Secure, role-based access ensures the right people have the right permissions.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-lg-12">
+        <h2 class="text-center mb-4">How It Works</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="text-center">
+            <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                <span class="text-white fw-bold fs-4">1</span>
+            </div>
+            <h5>Sign Up & Choose Your Role</h5>
+            <p class="text-muted">Register as a volunteer, NGO, donor, or admin to access your dedicated dashboard.</p>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="text-center">
+            <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                <span class="text-white fw-bold fs-4">2</span>
+            </div>
+            <h5>Connect & Collaborate</h5>
+            <p class="text-muted">NGOs create projects, volunteers book time slots, and donors support causes they care about.</p>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="text-center">
+            <div class="bg-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                <span class="text-white fw-bold fs-4">3</span>
+            </div>
+            <h5>Track Impact</h5>
+            <p class="text-muted">Monitor progress, earn achievements, and see the real-world impact of your contributions.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Leaderboards - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i data-feather="trending-up" class="me-2"></i>Volunteer Leaderboards
+        </h2>
+    </div>
+</div>
+
+<!-- Global Leaderboard -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="globe" class="me-2"></i>Global Rankings
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if global_leaders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Volunteer</th>
+                                    <th>Points</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for volunteer in global_leaders %}
+                                    <tr {% if volunteer.id == current_user.id %}class="table-primary"{% endif %}>
+                                        <td>
+                                            <strong>{{ loop.index }}</strong>
+                                            {% if loop.index == 1 %}
+                                                <i data-feather="crown" class="text-warning ms-1" style="width: 16px; height: 16px;"></i>
+                                            {% elif loop.index == 2 %}
+                                                <i data-feather="award" class="text-secondary ms-1" style="width: 16px; height: 16px;"></i>
+                                            {% elif loop.index == 3 %}
+                                                <i data-feather="award" class="text-warning ms-1" style="width: 16px; height: 16px;"></i>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ volunteer.first_name }} {{ volunteer.last_name }}
+                                            {% if volunteer.id == current_user.id %}
+                                                <span class="badge bg-primary ms-2">You</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <strong class="text-warning">{{ volunteer.points }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if volunteer.points >= 500 %}
+                                                <span class="badge bg-danger">Change Maker</span>
+                                            {% elif volunteer.points >= 200 %}
+                                                <span class="badge bg-warning">Volunteer Leader</span>
+                                            {% elif volunteer.points >= 100 %}
+                                                <span class="badge bg-success">Community Champion</span>
+                                            {% elif volunteer.points >= 50 %}
+                                                <span class="badge bg-info">Dedicated Helper</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Getting Started</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if current_user.id not in global_leaders|map(attribute='id') %}
+                        <div class="alert alert-info mt-3">
+                            <strong>Your Rank:</strong> You need {{ global_leaders[-1].points + 1 - current_user.points }} more points to enter the top 10!
+                            Current points: {{ current_user.points }}
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <p class="text-muted">No volunteers have earned points yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- NGO-Specific Leaderboards -->
+{% if ngo_leaders %}
+    <div class="row">
+        {% for ngo, leaders in ngo_leaders.items() %}
+            {% if leaders %}
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i data-feather="home" class="me-2"></i>{{ ngo.ngo_name or ngo.username }}
+                            </h6>
+                            <small class="text-muted">Top volunteers for this NGO</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tbody>
+                                        {% for volunteer, points in leaders %}
+                                            <tr>
+                                                <td>{{ loop.index }}</td>
+                                                <td>
+                                                    {{ volunteer.first_name }} {{ volunteer.last_name }}
+                                                    {% if volunteer.id == current_user.id %}
+                                                        <small class="badge bg-primary">You</small>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-end">
+                                                    <strong class="text-warning">{{ points or 0 }}</strong> pts
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

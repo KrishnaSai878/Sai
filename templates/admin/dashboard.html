@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i data-feather="shield" class="me-2"></i>Admin Dashboard
+        </h2>
+        <p class="text-muted">Platform administration and oversight</p>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i data-feather="users" class="me-3" style="width: 32px; height: 32px;"></i>
+                    <div>
+                        <h3 class="mb-0">{{ stats.total_users }}</h3>
+                        <small>Total Users</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i data-feather="folder" class="me-3" style="width: 32px; height: 32px;"></i>
+                    <div>
+                        <h3 class="mb-0">{{ stats.total_projects }}</h3>
+                        <small>Total Projects</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i data-feather="clock" class="me-3" style="width: 32px; height: 32px;"></i>
+                    <div>
+                        <h3 class="mb-0">{{ stats.pending_verifications }}</h3>
+                        <small>Pending Verifications</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i data-feather="dollar-sign" class="me-3" style="width: 32px; height: 32px;"></i>
+                    <div>
+                        <h3 class="mb-0">${{ "%.0f"|format(stats.total_donations) }}</h3>
+                        <small>Total Donations</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Users -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="user-plus" class="me-2"></i>Recent Users
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_users %}
+                    {% for user in recent_users %}
+                        <div class="border-bottom pb-2 mb-2">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ user.first_name }} {{ user.last_name }}</h6>
+                                    <small class="text-muted">@{{ user.username }} • {{ user.email }}</small>
+                                    <br>
+                                    <small class="text-muted">
+                                        Joined: {{ user.created_at.strftime('%Y-%m-%d') }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-{{ 'primary' if user.role.value == 'volunteer' else 'success' if user.role.value == 'ngo' else 'warning' if user.role.value == 'donor' else 'danger' }}">
+                                        {{ user.role.value.title() }}
+                                    </span>
+                                    <br>
+                                    <span class="badge bg-{{ 'success' if user.is_active else 'secondary' }} mt-1">
+                                        {{ 'Active' if user.is_active else 'Inactive' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    <a href="{{ url_for('admin_user_management') }}" class="btn btn-sm btn-outline-primary">View All Users</a>
+                {% else %}
+                    <p class="text-muted">No recent users.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Projects -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="folder-plus" class="me-2"></i>Recent Projects
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_projects %}
+                    {% for project in recent_projects %}
+                        <div class="border-bottom pb-2 mb-2">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ project.title }}</h6>
+                                    <small class="text-muted">
+                                        by {{ project.creator.ngo_name or project.creator.username }}
+                                    </small>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i data-feather="map-pin" class="me-1" style="width: 12px; height: 12px;"></i>
+                                        {{ project.location }}
+                                    </small>
+                                    <br>
+                                    <small class="text-muted">
+                                        Created: {{ project.created_at.strftime('%Y-%m-%d') }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-{{ 'success' if project.is_active else 'secondary' }}">
+                                        {{ 'Active' if project.is_active else 'Inactive' }}
+                                    </span>
+                                    <br>
+                                    <small class="text-muted mt-1">{{ project.time_slots|length }} slots</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No recent projects.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="zap" class="me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('admin_user_management') }}" class="btn btn-primary w-100">
+                            <i data-feather="users" class="me-2"></i>Manage Users
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('admin_verification_queue') }}" class="btn btn-warning w-100">
+                            <i data-feather="clock" class="me-2"></i>Verification Queue
+                            {% if stats.pending_verifications > 0 %}
+                                <span class="badge bg-dark">{{ stats.pending_verifications }}</span>
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('admin_platform_analytics') }}" class="btn btn-info w-100">
+                            <i data-feather="bar-chart" class="me-2"></i>Analytics
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-secondary w-100" disabled>
+                            <i data-feather="settings" class="me-2"></i>Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Platform Overview -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="activity" class="me-2"></i>Platform Overview
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-2">
+                        <div class="border-end">
+                            <h4 class="text-primary">{{ stats.total_users }}</h4>
+                            <small class="text-muted">Total Users</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="border-end">
+                            <h4 class="text-success">{{ stats.total_projects }}</h4>
+                            <small class="text-muted">Projects</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="border-end">
+                            <h4 class="text-warning">{{ stats.pending_verifications }}</h4>
+                            <small class="text-muted">Pending</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="border-end">
+                            <h4 class="text-info">${{ "%.0f"|format(stats.total_donations) }}</h4>
+                            <small class="text-muted">Donated</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="border-end">
+                            <h4 class="text-secondary">{{ moment.utcnow().strftime('%Y') }}</h4>
+                            <small class="text-muted">Current Year</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <h4 class="text-success">Active</h4>
+                        <small class="text-muted">Platform Status</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

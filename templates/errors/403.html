@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Access Denied - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <i data-feather="shield-off" style="width: 96px; height: 96px;" class="text-danger mb-4"></i>
+    
+    <h1 class="display-4 text-danger">403</h1>
+    <h2 class="mb-3">Access Denied</h2>
+    
+    <p class="lead text-muted mb-4">
+        You don't have permission to access this page. This platform uses strict role-based access control.
+    </p>
+    
+    {% if current_user.is_authenticated %}
+        <div class="alert alert-warning mx-auto" style="max-width: 500px;">
+            <strong>Current Role:</strong> {{ current_user.role.value.title() }}
+            <br>
+            <small>You can only access sections designated for your role.</small>
+        </div>
+        
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+            {% if current_user.is_volunteer() %}
+                <a href="{{ url_for('volunteer_dashboard') }}" class="btn btn-primary">
+                    <i data-feather="user" class="me-2"></i>Go to Volunteer Dashboard
+                </a>
+            {% elif current_user.is_ngo() %}
+                <a href="{{ url_for('ngo_dashboard') }}" class="btn btn-success">
+                    <i data-feather="home" class="me-2"></i>Go to NGO Dashboard
+                </a>
+            {% elif current_user.is_donor() %}
+                <a href="{{ url_for('donor_dashboard') }}" class="btn btn-warning">
+                    <i data-feather="dollar-sign" class="me-2"></i>Go to Donor Dashboard
+                </a>
+            {% elif current_user.is_admin() %}
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-danger">
+                    <i data-feather="shield" class="me-2"></i>Go to Admin Dashboard
+                </a>
+            {% endif %}
+            
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i data-feather="home" class="me-2"></i>Home Page
+            </a>
+        </div>
+    {% else %}
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+            <a href="{{ url_for('login') }}" class="btn btn-primary">
+                <i data-feather="log-in" class="me-2"></i>Sign In
+            </a>
+            <a href="{{ url_for('register') }}" class="btn btn-outline-primary">
+                <i data-feather="user-plus" class="me-2"></i>Create Account
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

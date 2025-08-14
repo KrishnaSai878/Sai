@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Review Verification - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i data-feather="eye" class="me-2"></i>Review Verification
+                </h4>
+            </div>
+            
+            <div class="card-body">
+                <!-- Volunteer Information -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>Volunteer Information</h5>
+                        <div class="border rounded p-3">
+                            <h6>{{ verification.volunteer.first_name }} {{ verification.volunteer.last_name }}</h6>
+                            <small class="text-muted">
+                                <i data-feather="mail" class="me-1" style="width: 14px; height: 14px;"></i>
+                                {{ verification.volunteer.email }}
+                            </small>
+                            {% if verification.volunteer.phone %}
+                                <br>
+                                <small class="text-muted">
+                                    <i data-feather="phone" class="me-1" style="width: 14px; height: 14px;"></i>
+                                    {{ verification.volunteer.phone }}
+                                </small>
+                            {% endif %}
+                            <br>
+                            <small class="text-warning">
+                                <i data-feather="star" class="me-1" style="width: 14px; height: 14px;"></i>
+                                Current points: {{ verification.volunteer.points }}
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5>Project & Slot Details</h5>
+                        <div class="border rounded p-3">
+                            <h6>{{ verification.booking.time_slot.project.title }}</h6>
+                            <small class="text-muted">
+                                <i data-feather="calendar" class="me-1" style="width: 14px; height: 14px;"></i>
+                                {{ verification.booking.time_slot.start_time.strftime('%Y-%m-%d') }}
+                            </small>
+                            <br>
+                            <small class="text-muted">
+                                <i data-feather="clock" class="me-1" style="width: 14px; height: 14px;"></i>
+                                {{ verification.booking.time_slot.start_time.strftime('%H:%M') }} - {{ verification.booking.time_slot.end_time.strftime('%H:%M') }}
+                            </small>
+                            <br>
+                            <small class="text-success">
+                                <i data-feather="star" class="me-1" style="width: 14px; height: 14px;"></i>
+                                Points to award: {{ verification.booking.time_slot.project.points_per_slot }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Upload Information -->
+                <div class="mb-4">
+                    <h5>Verification Upload</h5>
+                    <div class="border rounded p-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="bg-light p-3 rounded text-center">
+                                    <i data-feather="image" style="width: 64px; height: 64px;" class="text-muted mb-2"></i>
+                                    <br>
+                                    <strong>{{ verification.filename }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        Uploaded: {{ verification.upload_time.strftime('%Y-%m-%d %H:%M') }}
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                {% if verification.notes %}
+                                    <h6>Volunteer's Notes</h6>
+                                    <div class="bg-light p-2 rounded">
+                                        <em>"{{ verification.notes }}"</em>
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted">No notes provided by volunteer</p>
+                                {% endif %}
+                                
+                                <div class="mt-3">
+                                    <small class="text-muted">
+                                        <strong>Upload Status:</strong>
+                                        <span class="badge bg-warning">{{ verification.status.title() }}</span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Review Form -->
+                <div class="mb-4">
+                    <h5>Your Review</h5>
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.status.label(class="form-label") }}
+                            {{ form.status(class="form-select") }}
+                            {% if form.status.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.status.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.notes.label(class="form-label") }}
+                            {{ form.notes(class="form-control", rows="3", placeholder="Provide feedback or notes about this verification (optional)") }}
+                            {% if form.notes.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.notes.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Decision Impact -->
+                        <div class="alert alert-info">
+                            <h6><i data-feather="info" class="me-2"></i>Review Impact</h6>
+                            <ul class="mb-0">
+                                <li><strong>Approved:</strong> Volunteer receives {{ verification.booking.time_slot.project.points_per_slot }} points, booking marked as completed</li>
+                                <li><strong>Rejected:</strong> No points awarded, volunteer can re-upload if needed</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex">
+                            <button type="submit" class="btn btn-success flex-md-fill">
+                                <i data-feather="check" class="me-2"></i>Submit Review
+                            </button>
+                            <a href="{{ url_for('ngo_verification_gallery') }}" class="btn btn-outline-secondary flex-md-fill">
+                                <i data-feather="arrow-left" class="me-2"></i>Back to Gallery
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Additional Context -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-header">
+                                <h6 class="mb-0">Volunteer History</h6>
+                            </div>
+                            <div class="card-body">
+                                {% set volunteer_bookings = verification.volunteer.volunteer_bookings|selectattr('time_slot.project.ngo_id', 'equalto', current_user.id)|list %}
+                                <small>
+                                    <strong>Total bookings with your NGO:</strong> {{ volunteer_bookings|length }}<br>
+                                    <strong>Completed:</strong> {{ volunteer_bookings|selectattr('status', 'equalto', 'completed')|list|length }}<br>
+                                    <strong>Points earned from your projects:</strong> {{ volunteer_bookings|sum(attribute='points_awarded') }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-header">
+                                <h6 class="mb-0">Project Summary</h6>
+                            </div>
+                            <div class="card-body">
+                                <small>
+                                    <strong>Total slots:</strong> {{ verification.booking.time_slot.project.time_slots|length }}<br>
+                                    <strong>Completed slots:</strong> {{ verification.booking.time_slot.project.time_slots|selectattr('bookings')|map(attribute='bookings')|flatten|selectattr('status', 'equalto', 'completed')|list|length }}<br>
+                                    <strong>Points awarded so far:</strong> {{ (verification.booking.time_slot.project.time_slots|selectattr('bookings')|map(attribute='bookings')|flatten|selectattr('status', 'equalto', 'completed')|list|length) * verification.booking.time_slot.project.points_per_slot }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

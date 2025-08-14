@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Projects - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i data-feather="search" class="me-2"></i>Browse Projects
+        </h2>
+        <p class="text-muted">Discover meaningful projects to support</p>
+    </div>
+</div>
+
+{% if projects %}
+    <div class="row">
+        {% for project in projects %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">{{ project.title }}</h5>
+                        <small class="text-muted">
+                            <i data-feather="home" class="me-1" style="width: 14px; height: 14px;"></i>
+                            {{ project.creator.ngo_name or project.creator.username }}
+                        </small>
+                    </div>
+                    
+                    <div class="card-body">
+                        <p class="card-text">{{ project.description }}</p>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i data-feather="map-pin" class="me-1" style="width: 14px; height: 14px;"></i>
+                                {{ project.location }}
+                            </small>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i data-feather="calendar" class="me-1" style="width: 14px; height: 14px;"></i>
+                                Created: {{ project.created_at.strftime('%Y-%m-%d') }}
+                            </small>
+                        </div>
+                        
+                        {% if project.required_skills %}
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i data-feather="tool" class="me-1" style="width: 14px; height: 14px;"></i>
+                                    Skills needed: {{ project.required_skills }}
+                                </small>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Project Stats -->
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <small class="text-muted">Volunteer Slots:</small>
+                                <br>
+                                <strong>{{ project.time_slots|length }}</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Points/Slot:</small>
+                                <br>
+                                <strong class="text-warning">{{ project.points_per_slot }}</strong>
+                            </div>
+                        </div>
+                        
+                        <!-- Existing Donations -->
+                        {% set project_donations = project.donations %}
+                        {% if project_donations %}
+                            <div class="mt-3">
+                                <small class="text-success">
+                                    <i data-feather="heart" class="me-1" style="width: 14px; height: 14px;"></i>
+                                    ${{ "%.2f"|format(project_donations|sum(attribute='amount')) }} raised from {{ project_donations|length }} donation{{ 's' if project_donations|length != 1 else '' }}
+                                </small>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-footer">
+                        <div class="d-grid">
+                            <a href="{{ url_for('donate_to_project', project_id=project.id) }}" class="btn btn-success">
+                                <i data-feather="heart" class="me-2"></i>Support This Project
+                            </a>
+                        </div>
+                        
+                        {% if project_donations %}
+                            <div class="mt-2">
+                                <small class="text-muted">Recent supporters:</small>
+                                <div class="mt-1">
+                                    {% for donation in project_donations[:3] %}
+                                        <small class="d-block">
+                                            {% if donation.is_anonymous %}
+                                                Anonymous donor
+                                            {% else %}
+                                                {{ donation.donor.first_name }} {{ donation.donor.last_name[0] }}.
+                                            {% endif %}
+                                            - ${{ "%.2f"|format(donation.amount) }}
+                                            <span class="text-muted">({{ donation.donation_date.strftime('%m/%d') }})</span>
+                                        </small>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i data-feather="search" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+        <h4 class="text-muted">No Projects Available</h4>
+        <p class="text-muted">There are no active projects to support at the moment. Check back later!</p>
+    </div>
+{% endif %}
+{% endblock %}

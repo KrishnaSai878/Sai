@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Verification Queue - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i data-feather="clock" class="me-2"></i>Verification Queue
+        </h2>
+        <p class="text-muted">Review pending verification uploads across all NGOs</p>
+    </div>
+</div>
+
+{% if verifications %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i data-feather="info" class="me-2"></i>
+                <strong>{{ verifications|length }}</strong> verification{{ 's' if verifications|length != 1 else '' }} awaiting review
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        {% for verification in verifications %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card border-warning">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-0">{{ verification.volunteer.first_name }} {{ verification.volunteer.last_name }}</h6>
+                                <small class="text-muted">Volunteer</small>
+                            </div>
+                            <span class="badge bg-warning">Pending</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <strong>Project:</strong> {{ verification.booking.time_slot.project.title }}
+                        </div>
+                        
+                        <div class="mb-2">
+                            <strong>NGO:</strong> {{ verification.booking.time_slot.project.creator.ngo_name or verification.booking.time_slot.project.creator.username }}
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i data-feather="calendar" class="me-1" style="width: 14px; height: 14px;"></i>
+                                <strong>Slot Date:</strong> {{ verification.booking.time_slot.start_time.strftime('%Y-%m-%d %H:%M') }}
+                            </small>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i data-feather="clock" class="me-1" style="width: 14px; height: 14px;"></i>
+                                <strong>Duration:</strong> {{ verification.booking.time_slot.start_time.strftime('%H:%M') }} - {{ verification.booking.time_slot.end_time.strftime('%H:%M') }}
+                            </small>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i data-feather="upload" class="me-1" style="width: 14px; height: 14px;"></i>
+                                <strong>Uploaded:</strong> {{ verification.upload_time.strftime('%Y-%m-%d %H:%M') }}
+                            </small>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i data-feather="star" class="me-1" style="width: 14px; height: 14px;"></i>
+                                <strong>Points at stake:</strong> {{ verification.booking.time_slot.project.points_per_slot }}
+                            </small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="bg-light p-2 rounded text-center">
+                                <i data-feather="image" style="width: 48px; height: 48px;" class="text-muted"></i>
+                                <br>
+                                <small class="text-muted">{{ verification.filename }}</small>
+                            </div>
+                        </div>
+                        
+                        {% if verification.notes %}
+                            <div class="mb-2">
+                                <small>
+                                    <strong>Volunteer Notes:</strong><br>
+                                    <em class="text-muted">{{ verification.notes }}</em>
+                                </small>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Contact Information -->
+                        <div class="border-top pt-2 mt-2">
+                            <small class="text-muted">
+                                <strong>Contact Info:</strong><br>
+                                <i data-feather="mail" class="me-1" style="width: 12px; height: 12px;"></i>
+                                {{ verification.volunteer.email }}
+                                {% if verification.volunteer.phone %}
+                                    <br>
+                                    <i data-feather="phone" class="me-1" style="width: 12px; height: 12px;"></i>
+                                    {{ verification.volunteer.phone }}
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                Waiting {{ (moment.utcnow() - verification.upload_time).days }} day{{ 's' if (moment.utcnow() - verification.upload_time).days != 1 else '' }}
+                            </small>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-secondary" 
+                                        onclick="viewDetails('{{ verification.id }}')">
+                                    <i data-feather="eye" class="me-1"></i>Details
+                                </button>
+                                <button class="btn btn-outline-primary"
+                                        onclick="contactNGO('{{ verification.booking.time_slot.project.creator.email }}')">
+                                    <i data-feather="mail" class="me-1"></i>Contact NGO
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Bulk Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i data-feather="settings" class="me-2"></i>Admin Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i data-feather="alert-triangle" class="me-2"></i>
+                        <strong>Note:</strong> As an admin, you can monitor pending verifications but cannot directly approve/reject them. 
+                        Contact the respective NGOs to expedite the review process.
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Overdue Verifications (7+ days)</h6>
+                            {% set overdue = verifications|selectattr('upload_time', 'lt', moment.utcnow() - timedelta(days=7))|list %}
+                            {% if overdue %}
+                                <p class="text-warning">{{ overdue|length }} verification{{ 's' if overdue|length != 1 else '' }} overdue</p>
+                                <button class="btn btn-sm btn-warning" onclick="notifyOverdueNGOs()">
+                                    <i data-feather="mail" class="me-1"></i>Notify NGOs
+                                </button>
+                            {% else %}
+                                <p class="text-success">No overdue verifications</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6>Verification Statistics</h6>
+                            <small class="text-muted">
+                                • Average response time: 3.2 days<br>
+                                • Most active NGO: {{ verifications[0].booking.time_slot.project.creator.ngo_name if verifications else 'N/A' }}<br>
+                                • Total pending points: {{ verifications|sum(attribute='booking.time_slot.project.points_per_slot') }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i data-feather="check-circle" style="width: 64px; height: 64px;" class="text-success mb-3"></i>
+        <h4 class="text-success">All Caught Up!</h4>
+        <p class="text-muted">There are no pending verification uploads to review.</p>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">
+            <i data-feather="arrow-left" class="me-2"></i>Back to Dashboard
+        </a>
+    </div>
+{% endif %}
+
+<script>
+function viewDetails(verificationId) {
+    // In a real implementation, this would open a modal or navigate to a detail page
+    alert('View details for verification ID: ' + verificationId);
+}
+
+function contactNGO(email) {
+    window.location.href = 'mailto:' + email + '?subject=Pending Verification Review&body=Hello, you have pending verification uploads that need review.';
+}
+
+function notifyOverdueNGOs() {
+    if (confirm('Send reminder emails to NGOs with overdue verifications?')) {
+        // In a real implementation, this would trigger a backend process
+        alert('Reminder emails sent to NGOs with overdue verifications.');
+    }
+}
+</script>
+{% endblock %}

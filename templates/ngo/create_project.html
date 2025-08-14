@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Create Project - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i data-feather="plus" class="me-2"></i>Create New Project
+                </h4>
+            </div>
+            
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.title.label(class="form-label") }}
+                        {{ form.title(class="form-control", placeholder="Enter a compelling project title") }}
+                        {% if form.title.errors %}
+                            <div class="text-danger">
+                                {% for error in form.title.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="4", placeholder="Describe what volunteers will do and the impact of this project") }}
+                        {% if form.description.errors %}
+                            <div class="text-danger">
+                                {% for error in form.description.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            {{ form.location.label(class="form-label") }}
+                            {{ form.location(class="form-control", placeholder="City, State or specific address") }}
+                            {% if form.location.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.location.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.points_per_slot.label(class="form-label") }}
+                            {{ form.points_per_slot(class="form-control", placeholder="10") }}
+                            {% if form.points_per_slot.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.points_per_slot.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">Points volunteers earn per 2-hour slot</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.required_skills.label(class="form-label") }}
+                        {{ form.required_skills(class="form-control", rows="2", placeholder="List any specific skills, experience, or requirements (optional)") }}
+                        {% if form.required_skills.errors %}
+                            <div class="text-danger">
+                                {% for error in form.required_skills.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="text-muted">e.g., "Basic computer skills, Comfortable with children, Physical ability to lift 25lbs"</small>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i data-feather="info" class="me-2"></i>
+                        <strong>Next Steps:</strong> After creating your project, you'll be able to add specific time slots for volunteers to book. Each time slot is exactly 2 hours long.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex">
+                        <button type="submit" class="btn btn-success flex-md-fill">
+                            <i data-feather="plus" class="me-2"></i>Create Project
+                        </button>
+                        <a href="{{ url_for('ngo_manage_projects') }}" class="btn btn-outline-secondary flex-md-fill">
+                            <i data-feather="arrow-left" class="me-2"></i>Back to Projects
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

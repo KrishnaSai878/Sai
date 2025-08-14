@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Donor Dashboard - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i data-feather="dollar-sign" class="me-2"></i>Donor Dashboard
+        </h2>
+        <p class="text-muted">Welcome back, {{ current_user.first_name }}!</p>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i data-feather="heart" class="me-3" style="width: 32px; height: 32px;"></i>
+                    <div>
+                        <h3 class="mb-0">{{ stats.total_donations }}</h3>
+                        <small>Total Donations</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i data-feather="dollar-sign" class="me-3" style="width: 32px; height: 32px;"></i>
+                    <div>
+                        <h3 class="mb-0">${{ "%.2f"|format(stats.total_amount) }}</h3>
+                        <small>Total Amount</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i data-feather="folder" class="me-3" style="width: 32px; height: 32px;"></i>
+                    <div>
+                        <h3 class="mb-0">{{ (stats.total_amount / stats.total_donations)|round(2) if stats.total_donations > 0 else 0 }}</h3>
+                        <small>Avg. Donation</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Donations -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="activity" class="me-2"></i>Recent Donations
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_donations %}
+                    {% for donation in recent_donations %}
+                        <div class="border-bottom pb-2 mb-2">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ donation.project.title }}</h6>
+                                    <small class="text-muted">
+                                        <i data-feather="home" class="me-1" style="width: 14px; height: 14px;"></i>
+                                        {{ donation.project.creator.ngo_name or donation.project.creator.username }}
+                                    </small>
+                                    <br>
+                                    <small class="text-muted">
+                                        {{ donation.donation_date.strftime('%Y-%m-%d %H:%M') }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <h5 class="text-success mb-0">${{ "%.2f"|format(donation.amount) }}</h5>
+                                    {% if donation.is_anonymous %}
+                                        <small class="text-muted">Anonymous</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if donation.message %}
+                                <small class="text-muted">
+                                    <em>"{{ donation.message[:50] }}{% if donation.message|length > 50 %}..."{% endif %}"</em>
+                                </small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    <a href="{{ url_for('donor_donation_history') }}" class="btn btn-sm btn-outline-primary">View All Donations</a>
+                {% else %}
+                    <p class="text-muted">No donations made yet.</p>
+                    <a href="{{ url_for('donor_browse_projects') }}" class="btn btn-primary">Browse Projects to Support</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="zap" class="me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('donor_browse_projects') }}" class="btn btn-primary">
+                        <i data-feather="search" class="me-2"></i>Browse Projects
+                    </a>
+                    
+                    <a href="{{ url_for('donor_donation_history') }}" class="btn btn-outline-primary">
+                        <i data-feather="list" class="me-2"></i>Donation History
+                    </a>
+                    
+                    <a href="{{ url_for('donor_impact_reports') }}" class="btn btn-outline-success">
+                        <i data-feather="bar-chart" class="me-2"></i>Impact Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Impact Summary -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="trending-up" class="me-2"></i>Your Impact Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="border-end">
+                            <h4 class="text-primary">{{ stats.total_donations }}</h4>
+                            <small class="text-muted">Projects Supported</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border-end">
+                            <h4 class="text-success">${{ "%.0f"|format(stats.total_amount) }}</h4>
+                            <small class="text-muted">Total Contributed</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border-end">
+                            <h4 class="text-warning">{{ moment.utcnow().year - current_user.created_at.year or 1 }}</h4>
+                            <small class="text-muted">Years as Donor</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="text-info">Community</h4>
+                        <small class="text-muted">Impact Level</small>
+                    </div>
+                </div>
+                
+                {% if stats.total_amount > 0 %}
+                    <div class="mt-4">
+                        <p class="text-center text-muted">
+                            <i data-feather="heart" class="me-2"></i>
+                            Thank you for making a difference! Your contributions have supported {{ stats.total_donations }} project{{ 's' if stats.total_donations != 1 else '' }} 
+                            and helped create positive change in communities.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

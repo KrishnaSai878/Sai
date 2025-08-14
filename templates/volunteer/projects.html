@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Available Projects - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i data-feather="search" class="me-2"></i>Available Projects
+        </h2>
+    </div>
+</div>
+
+{% if projects %}
+    <div class="row">
+        {% for project in projects %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">{{ project.title }}</h5>
+                        <small class="text-muted">by {{ project.creator.ngo_name or project.creator.username }}</small>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">{{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}</p>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i data-feather="map-pin" class="me-1" style="width: 14px; height: 14px;"></i>
+                                {{ project.location }}
+                            </small>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small class="text-success">
+                                <i data-feather="star" class="me-1" style="width: 14px; height: 14px;"></i>
+                                {{ project.points_per_slot }} points per slot
+                            </small>
+                        </div>
+                        
+                        {% if project.required_skills %}
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i data-feather="tool" class="me-1" style="width: 14px; height: 14px;"></i>
+                                    Skills: {{ project.required_skills }}
+                                </small>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-footer">
+                        <h6>Available Time Slots:</h6>
+                        {% set available_slots = project.time_slots|selectattr('is_available')|selectattr('available_spots', 'gt', 0)|list %}
+                        
+                        {% if available_slots %}
+                            <div class="row">
+                                {% for slot in available_slots[:3] %}
+                                    <div class="col-12 mb-2">
+                                        <div class="d-flex justify-content-between align-items-center p-2 border rounded">
+                                            <div>
+                                                <small>
+                                                    <strong>{{ slot.start_time.strftime('%m/%d %H:%M') }}</strong>
+                                                    - {{ slot.end_time.strftime('%H:%M') }}
+                                                </small>
+                                                <br>
+                                                <small class="text-muted">{{ slot.available_spots }} spot(s) available</small>
+                                            </div>
+                                            <a href="{{ url_for('book_slot', slot_id=slot.id) }}" 
+                                               class="btn btn-sm btn-primary"
+                                               onclick="return confirm('Book this 2-hour slot?')">
+                                                Book
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            
+                            {% if available_slots|length > 3 %}
+                                <small class="text-muted">+ {{ available_slots|length - 3 }} more slots available</small>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-muted mb-0">No available slots at the moment.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i data-feather="search" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+        <h4 class="text-muted">No Projects Available</h4>
+        <p class="text-muted">There are no active projects at the moment. Check back later!</p>
+    </div>
+{% endif %}
+{% endblock %}

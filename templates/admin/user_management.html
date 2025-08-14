@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i data-feather="users" class="me-2"></i>User Management
+        </h2>
+        <p class="text-muted">Manage all platform users</p>
+    </div>
+</div>
+
+<!-- User Statistics -->
+<div class="row mb-4">
+    <div class="col-md-2 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="text-primary">{{ users|length }}</h4>
+                <small class="text-muted">Total Users</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="text-success">{{ users|selectattr('role.value', 'equalto', 'volunteer')|list|length }}</h4>
+                <small class="text-muted">Volunteers</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="text-warning">{{ users|selectattr('role.value', 'equalto', 'ngo')|list|length }}</h4>
+                <small class="text-muted">NGOs</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="text-info">{{ users|selectattr('role.value', 'equalto', 'donor')|list|length }}</h4>
+                <small class="text-muted">Donors</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="text-danger">{{ users|selectattr('role.value', 'equalto', 'admin')|list|length }}</h4>
+                <small class="text-muted">Admins</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="text-secondary">{{ users|selectattr('is_active', 'equalto', False)|list|length }}</h4>
+                <small class="text-muted">Inactive</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">All Users</h5>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-secondary" onclick="filterUsers('all')">All</button>
+                        <button type="button" class="btn btn-outline-primary" onclick="filterUsers('volunteer')">Volunteers</button>
+                        <button type="button" class="btn btn-outline-success" onclick="filterUsers('ngo')">NGOs</button>
+                        <button type="button" class="btn btn-outline-warning" onclick="filterUsers('donor')">Donors</button>
+                        <button type="button" class="btn btn-outline-danger" onclick="filterUsers('admin')">Admins</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Contact</th>
+                                <th>Joined</th>
+                                <th>Status</th>
+                                <th>Stats</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                                <tr data-role="{{ user.role.value }}">
+                                    <td>
+                                        <div>
+                                            <strong>{{ user.first_name }} {{ user.last_name }}</strong>
+                                            <br>
+                                            <small class="text-muted">@{{ user.username }}</small>
+                                            {% if user.role.value == 'ngo' and user.ngo_name %}
+                                                <br>
+                                                <small class="text-info">{{ user.ngo_name }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'primary' if user.role.value == 'volunteer' else 'success' if user.role.value == 'ngo' else 'warning' if user.role.value == 'donor' else 'danger' }}">
+                                            {{ user.role.value.title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            <i data-feather="mail" class="me-1" style="width: 12px; height: 12px;"></i>
+                                            {{ user.email }}
+                                        </small>
+                                        {% if user.phone %}
+                                            <br>
+                                            <small>
+                                                <i data-feather="phone" class="me-1" style="width: 12px; height: 12px;"></i>
+                                                {{ user.phone }}
+                                            </small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small>{{ user.created_at.strftime('%Y-%m-%d') }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if user.is_active else 'secondary' }}">
+                                            {{ 'Active' if user.is_active else 'Inactive' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            {% if user.role.value == 'volunteer' %}
+                                                <i data-feather="star" class="me-1 text-warning" style="width: 12px; height: 12px;"></i>
+                                                {{ user.points }} pts
+                                                <br>
+                                                <i data-feather="calendar" class="me-1 text-info" style="width: 12px; height: 12px;"></i>
+                                                {{ user.volunteer_bookings|length }} bookings
+                                            {% elif user.role.value == 'ngo' %}
+                                                <i data-feather="folder" class="me-1 text-success" style="width: 12px; height: 12px;"></i>
+                                                {{ user.created_projects|length }} projects
+                                            {% elif user.role.value == 'donor' %}
+                                                <i data-feather="dollar-sign" class="me-1 text-warning" style="width: 12px; height: 12px;"></i>
+                                                {{ user.donations|length }} donations
+                                                {% if user.donations %}
+                                                    <br>
+                                                    <small class="text-success">${{ "%.0f"|format(user.donations|sum(attribute='amount')) }}</small>
+                                                {% endif %}
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if user.id != current_user.id %}
+                                            <a href="{{ url_for('admin_toggle_user', user_id=user.id) }}" 
+                                               class="btn btn-sm btn-outline-{{ 'danger' if user.is_active else 'success' }}"
+                                               onclick="return confirm('{{ 'Deactivate' if user.is_active else 'Activate' }} user {{ user.username }}?')">
+                                                <i data-feather="{{ 'user-x' if user.is_active else 'user-check' }}" class="me-1"></i>
+                                                {{ 'Deactivate' if user.is_active else 'Activate' }}
+                                            </a>
+                                        {% else %}
+                                            <small class="text-muted">Current User</small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterUsers(role) {
+    const table = document.getElementById('usersTable');
+    const rows = table.querySelectorAll('tbody tr');
+    
+    rows.forEach(row => {
+        if (role === 'all' || row.dataset.role === role) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Update button states
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+}
+</script>
+{% endblock %}

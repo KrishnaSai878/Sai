@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Volunteer Dashboard - NGO Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i data-feather="user" class="me-2"></i>Volunteer Dashboard
+        </h2>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i data-feather="calendar" class="me-3" style="width: 32px; height: 32px;"></i>
+                    <div>
+                        <h3 class="mb-0">{{ stats.total_bookings }}</h3>
+                        <small>Total Bookings</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i data-feather="check-circle" class="me-3" style="width: 32px; height: 32px;"></i>
+                    <div>
+                        <h3 class="mb-0">{{ stats.completed_bookings }}</h3>
+                        <small>Completed</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i data-feather="star" class="me-3" style="width: 32px; height: 32px;"></i>
+                    <div>
+                        <h3 class="mb-0">{{ stats.points }}</h3>
+                        <small>Points Earned</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i data-feather="award" class="me-3" style="width: 32px; height: 32px;"></i>
+                    <div>
+                        <h3 class="mb-0">{{ stats.achievements_count }}</h3>
+                        <small>Achievements</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Upcoming Slots -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="clock" class="me-2"></i>Upcoming Slots
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_slots %}
+                    {% for booking in upcoming_slots %}
+                        <div class="border-bottom pb-2 mb-2">
+                            <h6 class="mb-1">{{ booking.time_slot.project.title }}</h6>
+                            <small class="text-muted">
+                                <i data-feather="calendar" class="me-1" style="width: 14px; height: 14px;"></i>
+                                {{ booking.time_slot.start_time.strftime('%Y-%m-%d %H:%M') }}
+                            </small>
+                            <br>
+                            <small class="text-muted">
+                                <i data-feather="map-pin" class="me-1" style="width: 14px; height: 14px;"></i>
+                                {{ booking.time_slot.project.location }}
+                            </small>
+                        </div>
+                    {% endfor %}
+                    <a href="{{ url_for('volunteer_bookings') }}" class="btn btn-sm btn-outline-primary">View All Bookings</a>
+                {% else %}
+                    <p class="text-muted">No upcoming slots scheduled.</p>
+                    <a href="{{ url_for('volunteer_projects') }}" class="btn btn-primary">Browse Projects</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Bookings -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="activity" class="me-2"></i>Recent Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_bookings %}
+                    {% for booking in recent_bookings %}
+                        <div class="border-bottom pb-2 mb-2">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ booking.time_slot.project.title }}</h6>
+                                    <small class="text-muted">
+                                        Booked: {{ booking.booking_time.strftime('%Y-%m-%d') }}
+                                    </small>
+                                </div>
+                                <span class="badge bg-{{ 'success' if booking.status == 'completed' else 'primary' if booking.status == 'confirmed' else 'secondary' }}">
+                                    {{ booking.status.title() }}
+                                </span>
+                            </div>
+                            {% if booking.points_awarded > 0 %}
+                                <small class="text-success">
+                                    <i data-feather="star" class="me-1" style="width: 12px; height: 12px;"></i>
+                                    +{{ booking.points_awarded }} points
+                                </small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No recent activity.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="zap" class="me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('volunteer_projects') }}" class="btn btn-primary w-100">
+                            <i data-feather="search" class="me-2"></i>Find Projects
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('volunteer_bookings') }}" class="btn btn-outline-primary w-100">
+                            <i data-feather="calendar" class="me-2"></i>My Bookings
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('volunteer_leaderboards') }}" class="btn btn-outline-success w-100">
+                            <i data-feather="trending-up" class="me-2"></i>Leaderboards
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('volunteer_achievements') }}" class="btn btn-outline-warning w-100">
+                            <i data-feather="award" class="me-2"></i>Achievements
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
